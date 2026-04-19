@@ -6,6 +6,8 @@ PyTorch may auto-select.  We enforce this via context managers from
 ``torch.nn.attention.sdpa_kernel``.
 """
 
+from __future__ import annotations
+
 from contextlib import contextmanager
 from enum import Enum
 from typing import Generator
@@ -13,6 +15,8 @@ from typing import Generator
 import torch
 from torch.nn.attention import SDPBackend, sdpa_kernel
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizerBase
+
+from .quantization import build_quantization_spec
 
 
 class AttentionBackend(str, Enum):
@@ -49,8 +53,9 @@ def load_model_and_tokenizer(
     model_name: str,
     device: str = "cuda",
     dtype: torch.dtype = torch.float16,
+    precision: str = "fp16",
 ) -> tuple[AutoModelForCausalLM, PreTrainedTokenizerBase]:
-    """Load a HuggingFace causal-LM in FP16 on *device*.
+    """Load a HuggingFace causal-LM with optional quantized weights.
 
     Parameters
     ----------
@@ -59,7 +64,11 @@ def load_model_and_tokenizer(
     device : str
         Target device (``"cuda"`` or ``"cpu"``).
     dtype : torch.dtype
-        Weight precision.  Baseline = ``torch.float16``.
+        Baseline weight precision.  Baseline = ``torch.float16``.
+    precision : str
+        Requested model precision mode. Supported values are ``"fp16"``,
+        ``"int8"``, and ``"4bit"``. Quantized modes route through
+        ``src.quantization`` and currently use bitsandbytes-backed loading.
 
     Returns
     -------
@@ -69,11 +78,18 @@ def load_model_and_tokenizer(
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        torch_dtype=dtype,
+    spec = build_quantization_spec(precision=precision, compute_dtype=dtype)
+
+    model_kwargs = dict(
+        torch_dtype=spec.torch_dtype,
         device_map=device,
         attn_implementation="sdpa",  # use PyTorch-native SDPA path
+    )
+    model_kwargs.update(spec.model_kwargs)
+
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        **model_kwargs,
     )
     model.eval()
     return model, tokenizer
