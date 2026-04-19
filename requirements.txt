@@ -2,6 +2,6 @@ torch>=2.2.0
 transformers>=4.40.0
 accelerate>=0.30.0
 wandb>=0.16.0
-datasets==2.x.x
+datasets>=2.19.0,<3.0.0
 bitsandbytes>=0.43.0
 accelerate>=0.30.0
