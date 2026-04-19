@@ -11,7 +11,7 @@ dummy_text = "The quick brown fox jumps over the lazy dog. " * 500
 full_tokens = tokenizer(dummy_text, return_tensors="pt").input_ids
 
 # Chop into exact lengths and save
-sequence_lengths = [128, 256, 512, 1024]
+sequence_lengths = [128, 256, 512, 1024, 2056] # as suggested by TA feedback go beyond 1024
 
 for length in sequence_lengths:
     # Slice the tensor to the exact length
