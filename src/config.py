@@ -7,7 +7,7 @@ from typing import List
 # ---------------------------------------------------------------------------
 # Sequence lengths to sweep (Table I in proposal)
 # ---------------------------------------------------------------------------
-SEQUENCE_LENGTHS: List[int] = [128, 256, 512, 1024]
+SEQUENCE_LENGTHS: List[int] = [128, 256, 512, 1024, 2056] #per TA suggestion
 
 # Number of *new* tokens to generate during decode
 DEFAULT_DECODE_TOKENS: int = 128
