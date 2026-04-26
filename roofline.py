@@ -218,7 +218,19 @@ def plot_prefill_roofline(
     -> Does FlashAttention shift prefill dots rightward? (less memory traffic)
     -> Does longer sequence push prefill further right? (more compute intensive)
     """
-    ai_range = (1e-1, 1e5)
+    # Auto-scale x-axis based on actual data
+    valid_ai = [
+        estimate_phase_intensity(r)["prefill"]["ai"]
+        for r in results
+        if estimate_phase_intensity(r)["prefill"]["ai"] > 0
+    ]
+    if valid_ai:
+        ai_min = max(1e-2, min(valid_ai) * 0.1)
+        ai_max = max(valid_ai) * 10
+        ai_range = (ai_min, ai_max)
+    else:
+        ai_range = (1e-1, 1e5)
+
     fig, ax  = plt.subplots(figsize=(13, 8))
 
     _draw_roofline_ceiling(ax, peak_flops, memory_bw, ai_range)
@@ -292,7 +304,19 @@ def plot_decode_roofline(
     -> Quantization shifts dots RIGHT (smaller weights = less bandwidth needed)
     -> FlashAttention shifts dots RIGHT (less KV cache traffic)
     """
-    ai_range = (1e-2, 1e4)
+    # Auto-scale x-axis based on actual data
+    valid_ai = [
+        estimate_phase_intensity(r)["decode"]["ai"]
+        for r in results
+        if estimate_phase_intensity(r)["decode"]["ai"] > 0
+    ]
+    if valid_ai:
+        ai_min = max(1e-3, min(valid_ai) * 0.1)
+        ai_max = max(valid_ai) * 10
+        ai_range = (ai_min, ai_max)
+    else:
+        ai_range = (1e-2, 1e4)
+
     fig, ax  = plt.subplots(figsize=(13, 8))
 
     _draw_roofline_ceiling(ax, peak_flops, memory_bw, ai_range)
