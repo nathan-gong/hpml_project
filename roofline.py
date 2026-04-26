@@ -158,10 +158,10 @@ def _draw_roofline_ceiling(ax, peak_flops, memory_bw, ai_range):
             fontsize=9, color="green", alpha=0.7)
 
     # Hardware ceiling labels
-    ax.text(ai_range[1] * 0.35, peak_flops * 1.1,
+    ax.text(ai_range[1] * 0.5, peak_flops * 1.05,
             f"Peak Compute: {peak_flops/1e12:.0f} TFLOPS",
             fontsize=8, ha="right")
-    ax.text(ai_range[0] * 1.3, memory_bw * ai_range[0] * 2.5,
+    ax.text(ai_range[0] * 3, memory_bw * ai_range[0] * 3 * 1.5,
             f"Memory BW: {memory_bw/1e9:.0f} GB/s",
             fontsize=8, rotation=38)
 
@@ -175,7 +175,7 @@ def _format_axes(ax, title, ai_range, peak_flops):
     ax.set_title(title, fontsize=11)
     ax.grid(True, which="both", alpha=0.3, linestyle="--")
     ax.set_xlim(ai_range)
-    ax.set_ylim(1e9, peak_flops * 3)
+    ax.set_ylim(1e9, peak_flops * 1.5)
 
 
 def _build_legend(ax, configs_present):
