@@ -76,27 +76,51 @@ def _get_flops(evt) -> int:
     return 0
 
 
-def extract_flops_and_bytes(prof) -> dict:
+def extract_flops_and_bytes(prof, result) -> dict:
     """
-    Extract total estimated FLOPS and memory bytes moved from profiler output.
-    These are the two numbers needed for the roofline plot:
-        Arithmetic Intensity = flops / bytes_moved
-        Performance          = flops / elapsed_seconds
+    Extract total estimated FLOPS and compute roofline metrics.
+
+    Fixes applied vs naive profiler extraction:
+
+    1. FLOPS  — summed from profiler key_averages() with with_flops=True.
+                This is accurate for standard PyTorch ops (matmul, attention).
+
+    2. Bytes moved — uses GPU peak memory (peak_memory_mb) from benchmark_single()
+                     CUDA event measurements. This is the correct proxy for
+                     HBM memory traffic on the roofline model.
+                     self_cpu_memory_usage from the profiler is NOT used because
+                     it only tracks tiny CPU-side Python allocations (~bytes),
+                     not the actual gigabytes of GPU HBM traffic.
+
+    3. Elapsed time — uses wall-clock elapsed_ms from benchmark_single() CUDA
+                      events, NOT the sum of profiler kernel times.
+                      Summing kernel times across key_averages() massively
+                      overcounts because GPU kernels run in parallel.
+
+    4. Arithmetic Intensity = total_flops / gpu_memory_bytes
+                            = FLOPS / bytes moved through HBM
+
+    5. Actual Performance   = total_flops / prefill_wall_clock_seconds
+                            = FLOPS / second (real GPU throughput)
     """
-    total_flops          = 0
-    total_cuda_time_us   = 0
-    total_self_cpu_memory = 0
+    total_flops        = 0
+    total_cuda_time_us = 0
 
     for evt in prof.key_averages():
         total_flops        += _get_flops(evt)
         total_cuda_time_us += _get_cuda_time(evt)
-        mem = getattr(evt, "self_cpu_memory_usage", 0) or 0
-        total_self_cpu_memory += abs(mem)
 
-    elapsed_sec = total_cuda_time_us / 1e6
+    # Bytes moved: GPU peak memory from CUDA event measurements
+    # prefill phase dominates FLOPS so we use prefill peak memory
+    gpu_memory_bytes = result.prefill.peak_memory_mb * 1e6
+
+    # Elapsed time: wall-clock prefill time from CUDA events (accurate)
+    # NOT total_cuda_time_us which is sum of all kernel times (overcounts parallel execution)
+    elapsed_sec = result.prefill.elapsed_ms / 1000.0
+
     arithmetic_intensity = (
-        total_flops / total_self_cpu_memory
-        if total_self_cpu_memory > 0 else 0.0
+        total_flops / gpu_memory_bytes
+        if gpu_memory_bytes > 0 else 0.0
     )
     actual_performance = (
         total_flops / elapsed_sec
@@ -104,10 +128,10 @@ def extract_flops_and_bytes(prof) -> dict:
     )
 
     return {
-        "total_flops":                     total_flops,
-        "total_cuda_time_us":              total_cuda_time_us,
-        "total_self_cpu_memory_bytes":     total_self_cpu_memory,
-        "arithmetic_intensity":            round(arithmetic_intensity, 4),
+        "total_flops":                      total_flops,
+        "total_cuda_time_us":               total_cuda_time_us,   # kept for reference only
+        "gpu_memory_bytes":                 int(gpu_memory_bytes),
+        "arithmetic_intensity":             round(arithmetic_intensity, 4),
         "actual_performance_flops_per_sec": actual_performance,
     }
 
@@ -183,7 +207,9 @@ def profile_single_config(
             )
 
     # ---- Extract profiler stats ------------------------------------------
-    roofline_stats = extract_flops_and_bytes(prof)
+    # Pass result so extract_flops_and_bytes can use accurate GPU memory
+    # and wall-clock timing from CUDA events instead of profiler kernel sums
+    roofline_stats = extract_flops_and_bytes(prof, result)
     top_kernels    = get_top_kernels(prof, top_n=10)
 
     # ---- Save Chrome trace -----------------------------------------------
@@ -313,6 +339,7 @@ def main() -> None:
                         f"{log_key}/prefill_mem_mb":       result["prefill_mem_mb"],
                         f"{log_key}/kv_cache_mb":          result["kv_cache_mb"],
                         f"{log_key}/total_flops":          result["total_flops"],
+                        f"{log_key}/gpu_memory_bytes":     result["gpu_memory_bytes"],
                         f"{log_key}/arithmetic_intensity": result["arithmetic_intensity"],
                         f"{log_key}/actual_performance":   result["actual_performance_flops_per_sec"],
                     })
