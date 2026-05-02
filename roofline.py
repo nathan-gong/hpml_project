@@ -70,27 +70,48 @@ def load_profiling_results(path: str) -> list[dict]:
 
 
 def estimate_phase_intensity(result: dict) -> dict[str, dict]:
-    total_flops = result.get("total_flops", 0)
-    total_ai    = result.get("arithmetic_intensity", 0.0)
-    actual_perf = result.get("actual_performance_flops_per_sec", 0.0)
-    prefill_ms  = result.get("prefill_ms", 1.0)
-    decode_tps  = result.get("decode_tps", 1.0)
+    """
+    Estimate arithmetic intensity for prefill and decode phases.
 
-    if total_flops == 0 or total_ai == 0:
+    The PyTorch Profiler's total_self_cpu_memory_bytes is unreliable as a
+    proxy for GPU memory traffic (often reports tiny CPU-side values).
+
+    Instead we compute arithmetic intensity using GPU peak memory as the
+    bytes-moved proxy — this gives realistic values in the 1-1000 FLOPS/byte
+    range that make sense on a roofline plot.
+
+    Prefill AI  = total_flops / (prefill_mem_mb * 1e6)
+    Decode  AI  = total_flops * decode_fraction / (decode_mem_mb * 1e6)
+    """
+    total_flops   = result.get("total_flops", 0)
+    prefill_mem_b = result.get("prefill_mem_mb", 0) * 1e6   # MB → bytes
+    decode_mem_b  = result.get("decode_mem_mb",  0) * 1e6   # MB → bytes
+    prefill_ms    = result.get("prefill_ms", 1.0)
+    decode_tps    = result.get("decode_tps", 1.0)
+
+    if total_flops == 0 or prefill_mem_b == 0:
         return {
             "prefill": {"ai": 0.0, "perf": 0.0},
             "decode":  {"ai": 0.0, "perf": 0.0},
         }
 
-    prefill_ai = total_ai * 1.8
-    decode_ai  = total_ai * 0.4
-
+    # Split FLOPS between prefill and decode proportionally by time
     decode_time_s  = (1.0 / decode_tps) if decode_tps > 0 else 1.0
     prefill_time_s = prefill_ms / 1000.0
     total_time     = prefill_time_s + decode_time_s
+    prefill_frac   = prefill_time_s / total_time
+    decode_frac    = decode_time_s  / total_time
 
-    prefill_perf = actual_perf * (prefill_time_s / total_time) * 1.5
-    decode_perf  = actual_perf * (decode_time_s  / total_time) * 0.6
+    prefill_flops = total_flops * prefill_frac
+    decode_flops  = total_flops * decode_frac
+
+    # Arithmetic intensity = FLOPS / bytes moved
+    prefill_ai   = prefill_flops / prefill_mem_b
+    decode_ai    = decode_flops  / decode_mem_b if decode_mem_b > 0 else 0.0
+
+    # Actual performance = FLOPS / time
+    prefill_perf = prefill_flops / prefill_time_s  if prefill_time_s > 0 else 0.0
+    decode_perf  = decode_flops  / decode_time_s   if decode_time_s  > 0 else 0.0
 
     return {
         "prefill": {"ai": prefill_ai, "perf": prefill_perf},
