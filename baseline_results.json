@@ -1,0 +1,72 @@
+[
+  {
+    "prefill_ttft_ms_mean": 84.94,
+    "prefill_ttft_ms_std": 0.11,
+    "decode_tok_per_sec_mean": 15.59,
+    "decode_tok_per_sec_std": 0.03,
+    "prefill_peak_mem_mb_mean": 15373.6,
+    "prefill_peak_mem_mb_std": 0.0,
+    "decode_peak_mem_mb_mean": 15379.9,
+    "decode_peak_mem_mb_std": 0.0,
+    "seq_len": 128,
+    "model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "backend": "math",
+    "precision": "fp16"
+  },
+  {
+    "prefill_ttft_ms_mean": 111.37,
+    "prefill_ttft_ms_std": 1.49,
+    "decode_tok_per_sec_mean": 15.4,
+    "decode_tok_per_sec_std": 0.01,
+    "prefill_peak_mem_mb_mean": 15421.3,
+    "prefill_peak_mem_mb_std": 0.0,
+    "decode_peak_mem_mb_mean": 15434.9,
+    "decode_peak_mem_mb_std": 0.0,
+    "seq_len": 256,
+    "model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "backend": "math",
+    "precision": "fp16"
+  },
+  {
+    "prefill_ttft_ms_mean": 217.42,
+    "prefill_ttft_ms_std": 2.34,
+    "decode_tok_per_sec_mean": 15.04,
+    "decode_tok_per_sec_std": 0.02,
+    "prefill_peak_mem_mb_mean": 15518.6,
+    "prefill_peak_mem_mb_std": 0.0,
+    "decode_peak_mem_mb_mean": 15546.7,
+    "decode_peak_mem_mb_std": 0.0,
+    "seq_len": 512,
+    "model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "backend": "math",
+    "precision": "fp16"
+  },
+  {
+    "prefill_ttft_ms_mean": 532.64,
+    "prefill_ttft_ms_std": 2.0,
+    "decode_tok_per_sec_mean": 13.62,
+    "decode_tok_per_sec_std": 0.01,
+    "prefill_peak_mem_mb_mean": 15849.2,
+    "prefill_peak_mem_mb_std": 0.0,
+    "decode_peak_mem_mb_mean": 15759.5,
+    "decode_peak_mem_mb_std": 0.0,
+    "seq_len": 1024,
+    "model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "backend": "math",
+    "precision": "fp16"
+  },
+  {
+    "prefill_ttft_ms_mean": 1552.55,
+    "prefill_ttft_ms_std": 1.14,
+    "decode_tok_per_sec_mean": 10.86,
+    "decode_tok_per_sec_std": 0.0,
+    "prefill_peak_mem_mb_mean": 16957.7,
+    "prefill_peak_mem_mb_std": 0.0,
+    "decode_peak_mem_mb_mean": 16194.2,
+    "decode_peak_mem_mb_std": 0.0,
+    "seq_len": 2048,
+    "model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "backend": "math",
+    "precision": "fp16"
+  }
+]
