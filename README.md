@@ -10,7 +10,7 @@
 pip install -r requirements.txt
 ```
 
-If using a gated model (e.g. Llama-2), authenticate first:
+If using a gated model (e.g. Llama-3.1-8B-Instruct), authenticate first:
 
 ```bash
 huggingface-cli login
@@ -18,23 +18,23 @@ huggingface-cli login
 
 ### Running the Baseline
 
-Full sweep across all sequence lengths (128, 256, 512, 1024):
+Full sweep across all sequence lengths (128, 256, 512, 1024, 2048):
 
 ```bash
-python run_baseline.py --model meta-llama/Llama-2-7b-hf
+python run_baseline.py --model meta-llama/Llama-3.1-8B-Instruct
 ```
 
 Quick sanity check (1 repeat, no warmup, no W&B):
 
 ```bash
-python run_baseline.py --model meta-llama/Llama-2-7b-hf \
+python run_baseline.py --model meta-llama/Llama-3.1-8B-Instruct \
     --warmup 0 --repeats 1 --no-wandb
 ```
 
 Custom sequence lengths:
 
 ```bash
-python run_baseline.py --model mistralai/Mistral-7B-v0.1 \
+python run_baseline.py --model meta-llama/Meta-Llama-3.1-8B-Instruct \
     --seq-lengths 128 512 --decode-tokens 64
 ```
 
