@@ -197,7 +197,7 @@ python roofline.py --input profiling_results.json --output-dir plots --wandb
 
 ---
 
-## AI USAGE DISCLOSURE — Required on Every Submission
+## AI USAGE DISCLOSURE
 
 **Did you use any AI tool in completing this assignment?**
 Yes, I used AI assistance as described below.
