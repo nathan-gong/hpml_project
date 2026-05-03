@@ -17,7 +17,6 @@ huggingface-cli login
 ```
 
 ### Running the Baseline
-
 Full sweep across all sequence lengths (128, 256, 512, 1024, 2048):
 
 ```bash
