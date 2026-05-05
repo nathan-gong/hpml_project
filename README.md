@@ -166,6 +166,9 @@ python roofline.py \
 Outputs: `roofline_prefill.png`, `roofline_decode.png`, `arithmetic_intensity.png`
 
 ### Step 3 — W&B Dashboard
+
+[Link to Dashboard](wandb.ai/hpml2026-final-project/hpml2026-final-project)
+
 ```bash
 python dashboard_test.py  # builds layout with dummy data
 ```
